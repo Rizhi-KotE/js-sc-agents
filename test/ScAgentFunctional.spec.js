@@ -1,8 +1,18 @@
-import {ScKeynodes, SctpClient} from "@ostis/sc-network";
 import {expect} from "chai";
 import "../node_modules/mocha/mocha.js";
 import {agentsKeynodes, ScAgentCommand} from "../src/ScAgent";
+import SctpClient from "../src/SctpClientOnPromises";
 
+function NOOP() {
+}
+
+function logEvents(sctpClient) {
+    const origin = sctpClient.__proto__.event_emit;
+    sctpClient.__proto__.event_emit = function () {
+        return origin.apply(this)
+            .done((e) => console.log(`event came: ${e}`))
+    }
+}
 console.log(mocha);
 mocha.setup('bdd');
 
@@ -17,44 +27,70 @@ function fail(done) {
     };
 }
 
-describe("sctpCleint functionality", function () {
-    it("sctpClient should connect to SC", function (done) {
-        let sctpClient = new SctpClient("ws://localhost:8081/sctp", 500, createNode, fail(done), fail(done));
+describe("sctpClient functionality", function () {
+    let sctpClient;
+    it("sctpClient should connect to SC", async function () {
+        return new Promise((success, fail) => {
+            sctpClient = new SctpClient({onError: fail, onClose: fail});
+            sctpClient.connect("ws://localhost:8081/sctp", createNode);
 
-        function createNode() {
-            sctpClient.CreateNode(0x20 | 0x80)
-                .done(success(done), fail(done));
-        }
+            function createNode() {
+                sctpClient.create_node(0x20 | 0x80)
+                    .done(success, fail);
+            }
+        })
     });
+
+    after(async function () {
+        return sctpClient.close();
+    })
 });
 
 describe("ScAgent functionality", function () {
-    let sctpClient, keynodes;
+    let sctpClient, keynodes, scAgent;
     before(async function () {
         await new Promise(function (success, fail) {
-            sctpClient = new SctpClient("ws://localhost:8081/sctp", 500, success, fail);
+            sctpClient = new SctpClient({onError: fail, onClose: fail});
+            sctpClient.connect("ws://localhost:8081/sctp", success);
         });
-        keynodes = new ScKeynodes(sctpClient);
-        return keynodes.ResolveKeynodes(agentsKeynodes);
+        keynodes = new ScKeynodes(sctpClient, []);
+        return keynodes.resolveArrayOfKeynodes(agentsKeynodes);
     });
 
     it("ScAgent should resolve promise after registration", async function () {
-        const agent = new ScAgentCommand(sctpClient, keynodes, "test_command_class");
-        return agent.register();
+        scAgent = new ScAgentCommand(sctpClient, keynodes, "test_command_class", NOOP);
+        return scAgent.register();
     });
 
-    it("ScAgent should react on command", function (end) {
-        expect(true).to.be.false();
-        end()
+    it("ScAgent should react on command", async function () {
+        sctpClient.eventFrequency = 10;
+        logEvents(sctpClient);
+        const {test_command_class, command_initiated} = await keynodes.resolveArrayOfKeynodes(['test_command_class']);
+
+        let lastPromise = new Promise((success, fail) => scAgent = new ScAgentCommand(sctpClient, keynodes, "test_command_class", success))
+            .then(console.log.bind(undefined, "promise"), console.error);
+        await scAgent.register();
+        await sctpClient.create_arc(sc_type_arc_pos_const_perm, command_initiated, test_command_class);
+        return lastPromise
     });
 
-    it("ScAgent should save answer", function (end) {
-        expect(true).to.be.false();
-        end()
-    });
-
-    it("ScAgent should save failed answer", function (end) {
-        expect(true).to.be.false();
-        end()
-    });
+    after(async function () {
+        scAgent && scAgent.unregister();
+        return sctpClient.close();
+    })
+    // it("ScAgent should react on command", async function (end) {
+    //     const {test_command_class} = keynodes;
+    //     new ScAgentCommand(sctpClient, keynodes, "test_command_class", end).register().catch(end);
+    //     await doCommand(test_command_class);
+    // });
+    //
+    // it("ScAgent should save answer", function (end) {
+    //     expect(true).to.be.false();
+    //     end()
+    // });
+    //
+    // it("ScAgent should save failed answer", function (end) {
+    //     expect(true).to.be.false();
+    //     end()
+    // });
 });

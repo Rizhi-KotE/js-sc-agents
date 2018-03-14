@@ -11,9 +11,11 @@
   "author": "rizhi-kote",
   "license": "ISC",
   "dependencies": {
-    "@ostis/sc-network": "^0.1.4",
+    "@ostis/sc-core": "latest",
+    "@ostis/sc-network": "latest",
+    "jquery": "^3.3.1",
     "underscore": "^1.8.3",
-    "@ostis/sc-core": "latest"
+    "validate-arguments": "0.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.40",
@@ -30,6 +32,7 @@
     "karma-babel-preprocessor": "^8.0.0-beta.0",
     "karma-webpack": "^2.0.9",
     "mocha": "^5.0.1",
+    "script-loader": "^0.7.2",
     "style-loader": "^0.20.2",
     "ts-loader": "^3.5.0",
     "typescript": "^2.7.2",

@@ -1,0 +1,12 @@
+sc_agent_of_finding_area 
+<- sc_node_not_relation;
+=> nrel_main_idtf:
+             [Поиск площади*] 
+             (* <- lang_ru;; *);
+             [Finding area*]
+             (* <- lang_en;;*);
+=> nrel_primary_initiation_condition:
+   (sc_event_add_input_arc => cmd_of_find_area);
+<- abstract_sc_agent;
+<- sc_agent_implemented_in_js;;
+
