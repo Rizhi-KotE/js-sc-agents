@@ -14,6 +14,7 @@
     "@ostis/sc-core": "latest",
     "@ostis/sc-network": "latest",
     "jquery": "^3.3.1",
+    "ramda": "^0.25.0",
     "underscore": "^1.8.3",
     "validate-arguments": "0.0.8"
   },
