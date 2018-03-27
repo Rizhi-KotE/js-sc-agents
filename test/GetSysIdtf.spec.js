@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import "../node_modules/mocha/mocha.js";
 import getSysIdtf from "../src/GetSysItdf";
-import SctpClient from "../src/SctpClientOnPromises";
+import SctpClient from "../src/adapters/SctpClientOnPromises";
 
 function NOOP() {
 }

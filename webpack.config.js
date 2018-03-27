@@ -5,26 +5,30 @@ module.exports = {
         test: ["./test/index.spec.js"]
     },
     output: {
+        library: "ScAgentRegistry",
         path: path.resolve(__dirname, "dist"),
         publicPath: "/assets/",
         filename: "[name].bundle.js",
-        sourceMapFilename: "bundle.js.map"
+        sourceMapFilename: "[name].bundle.map.js"
     },
+    externals: [
+        "sc-web"
+    ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js']
     },
     devServer: {
         proxy: [
             {
-                context: ["/sctp", "/api", "/client", "/static"],
+                context: ["/", "/sctp", "/api", "/client", "/static"],
                 target: "http://localhost:8000",
                 secure: false,
                 ws: true
             }
         ],
         contentBase: "./dist",
-        inline: true,
-        hot: true
+        // inline: true,
+        // hot: true
     },
     module: {
         rules: [

@@ -1,7 +1,6 @@
 import {assert} from "chai";
 import "../node_modules/mocha/mocha.js";
-import {agentsKeynodes, ScAgentCommand} from "../src/ScAgent";
-import SctpClient from "../src/SctpClientOnPromises";
+import SctpClient from "../src/adapters/SctpClientOnPromises";
 import Registry from "../src/ScAgentRegistry";
 import doCommand from "./Utils";
 

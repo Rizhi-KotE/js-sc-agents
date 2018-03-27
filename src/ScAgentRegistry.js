@@ -2,13 +2,13 @@ import * as R from "ramda";
 import validate from "./ValidationUtils";
 import ConstrUtils from "./ScConstrIteratorUtils";
 import getSysIdtfs from "./GetSysItdf";
-import EventTypeUtils from "./ScEventValidation"
+import EventTypeUtils from "./ScEventValidation";
+import {sctpClient, scKeynodes} from "./sevice/Singletons";
 
 export default class ScAgentRegistry {
 
-    constructor(sctpClient, scKeynodes) {
-        this.sctpClient = sctpClient;
-        this.scKeynodes = scKeynodes;
+    constructor() {
+        console.log(`Create ScAgentRegistry`);
         this.definedAgents = {};
         this.activeAgents = {};
         this.constrUtils = new ConstrUtils(sctpClient);
@@ -25,7 +25,7 @@ export default class ScAgentRegistry {
      */
     async _fetchAgentsDefinition() {
         const {sc_agent_implemented_in_js, nrel_primary_initiation_condition} =
-            await this.scKeynodes.resolveArrayOfKeynodes(['sc_agent_implemented_in_js', 'nrel_primary_initiation_condition']);
+            await scKeynodes.resolveArrayOfKeynodes(['sc_agent_implemented_in_js', 'nrel_primary_initiation_condition']);
         const agentDefinitions = await this.constrUtils.doStructsRequest(
             this.constrUtils.mapConstructs(['agent_inst', 'initiation_condition_arc']), [
                 SctpConstrIter(SctpIteratorType.SCTP_ITERATOR_3F_A_A, [
@@ -74,7 +74,7 @@ export default class ScAgentRegistry {
     async subscribeToEvent(agentDefinition, executor){
         const scEventType = await this.eventTypeUtils.getSctpEventType(agentDefinition.eventTypeAddr);
         console.log(`Subscribing for event type ${scEventType} and target ${agentDefinition.eventTargetAddr}`);
-        await this.sctpClient.event_create(scEventType, agentDefinition.eventTargetAddr, executor);
+        await sctpClient.event_create(scEventType, agentDefinition.eventTargetAddr, executor);
     }
 
     async registrate(sysIdtf, agentFunction){
