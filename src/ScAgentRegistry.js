@@ -3,7 +3,7 @@ import validate from "./ValidationUtils";
 import ConstrUtils from "./ScConstrIteratorUtils";
 import getSysIdtfs from "./GetSysItdf";
 import EventTypeUtils from "./ScEventValidation";
-import {sctpClient, scKeynodes} from "./sevice/Singletons";
+import {sctpClient, scKeynodes} from "./service/Singletons";
 
 export default class ScAgentRegistry {
 

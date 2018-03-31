@@ -1,4 +1,4 @@
-import {scKeynodes, sctpClient} from "./src/sevice/Singletons";
+import {scKeynodes, sctpClient} from "./src/service/Singletons";
 
 import ScAgentRegistry from "./src/ScAgentRegistry"
 
