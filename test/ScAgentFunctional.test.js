@@ -1,14 +1,9 @@
-import {assert} from "chai";
-import "../node_modules/mocha/mocha.js";
-import SctpClient from "../src/adapters/SctpClientOnPromises";
 import Registry from "../src/ScAgentRegistry";
 import doCommand from "./Utils";
+import {sctpClient} from "../src/service/sctpClient";
 
 function NOOP() {
 }
-
-console.log(mocha);
-mocha.setup('bdd');
 
 function success(done) {
     return function (msg) {
@@ -21,24 +16,19 @@ function fail(done) {
     };
 }
 
-describe("sctpClient functionality", function () {
-    let sctpClient;
-    it("sctpClient should connect to SC", async function () {
-        await new Promise((success, fail) => {
-            sctpClient = new SctpClient({onError: fail, onClose: fail});
-            sctpClient.connect("ws://localhost:8081/sctp", success);
-        });
+describe("sctpClient.js functionality", function () {
+    it("sctpClient.js should connect to SC", async function () {
         return sctpClient.create_node(0x20 | 0x80);
     });
 
-    after(async function () {
+    afterEach(async function () {
         return sctpClient.close();
     })
 });
 
 describe("ScAgent registry", function () {
     let sctpClient, keynodes;
-    before(async function () {
+    beforeEach(async function () {
         await new Promise(function (success, fail) {
             sctpClient = new SctpClient({eventFrequency: 50, onError: fail, onClose: fail});
             sctpClient.connect("ws://localhost:8081/sctp", success);
@@ -64,7 +54,7 @@ describe("ScAgent registry", function () {
         let lastPromise = new Promise((success, fail) =>
             registrationPromise = registry.registrate('sc_agent_of_finding_area', success));
         await registrationPromise;
-        // await sctpClient.create_arc(sc_type_arc_pos_const_perm, sc_agent_of_finding_area, cmd_of_find_area);
+        // await sctpClient.js.create_arc(sc_type_arc_pos_const_perm, sc_agent_of_finding_area, cmd_of_find_area);
         doCommand(cmd_of_find_area);
         return lastPromise;
     });

@@ -1,4 +1,6 @@
 import * as R from "ramda";
+import {scKeynodes} from "./service/scKeynodes";
+
 /**
  * sys-id - of event type
  * sctp-code - of event type
@@ -18,7 +20,7 @@ function _selectKeys(keys, object) {
     return R.zipObj(selecrot(object), keys);
 }
 
-async function _eventTypeAddrs(scKeynodes){
+async function _eventTypeAddrs(){
 
     const eventTypeSysIds = Object.keys(eventTypes);
     const keynodes = await scKeynodes.resolveArrayOfKeynodes(eventTypeSysIds);
@@ -26,23 +28,20 @@ async function _eventTypeAddrs(scKeynodes){
 }
 
 export default class ScEventTypeUtils {
-    constructor(scKeynodes){
-        this.scKeynodes = scKeynodes;
-    }
 
     /**
      * scAddr -> sctp_event code, used in protocol
      * @returns {Promise.<void>}
      */
     async getSctpEventType(eventAddr) {
-        const eventTypeAddrs = await _eventTypeAddrs(this.scKeynodes);
+        const eventTypeAddrs = await _eventTypeAddrs();
         const eventTypeSysId = eventTypeAddrs[eventAddr];
         const eventTypeSctpCode = eventTypes[eventTypeSysId];
         return eventTypeSctpCode;
     }
 
-    async isEventType(sctpClient, scKeynodes, eventAddr) {
-        const eventTypeAddrs = await _eventTypeAddrs(this.scKeynodes);
+    async isEventType(eventAddr) {
+        const eventTypeAddrs = await _eventTypeAddrs();
         return eventTypeAddrs[eventAddr];
     }
 }
