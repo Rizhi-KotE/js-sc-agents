@@ -1,6 +1,28 @@
 import Registry from "../src/ScAgentRegistry";
 import doCommand from "./Utils";
-import {sctpClient} from "../src/service/sctpClient";
+import * as utils from "utils";
+import SctpClientOnPromises from "../src/adapters/SctpClientOnPromises";
+import ScKeynodesAdapter from "../src/adapters/ScKeynodesAdapter";
+import {
+    SctpConstrIter,
+    SctpIteratorType,
+    sc_agent_implemented_in_js,
+    sc_type_arc_pos_const_perm,
+    sc_type_node
+} from "utils";
+
+async function initClient() {
+    const sctpClientPromise = new Promise((success, fail) => {
+        utils.SctpClientCreate()
+            .done((sctpClient) => {
+                delete sctpClient.onClose;
+                return sctpClient;
+            }).done(success).fail(fail)
+    });
+    const sctpClient = new SctpClientOnPromises(sctpClientPromise);
+    const scKeynodes = new ScKeynodesAdapter(sctpClientPromise);
+    return [sctpClient, scKeynodes];
+}
 
 function NOOP() {
 }
@@ -17,7 +39,10 @@ function fail(done) {
 }
 
 describe("sctpClient.js functionality", function () {
+    let sctpClient;
+
     it("sctpClient.js should connect to SC", async function () {
+        [sctpClient] = await initClient();
         return sctpClient.create_node(0x20 | 0x80);
     });
 
@@ -29,11 +54,7 @@ describe("sctpClient.js functionality", function () {
 describe("ScAgent registry", function () {
     let sctpClient, keynodes;
     beforeEach(async function () {
-        await new Promise(function (success, fail) {
-            sctpClient = new SctpClient({eventFrequency: 50, onError: fail, onClose: fail});
-            sctpClient.connect("ws://localhost:8081/sctp", success);
-        });
-        keynodes = new ScKeynodes(sctpClient, []);
+        [sctpClient, keynodes] = await initClient();
     });
 
     it("Registry should find all js-agents", async function () {
@@ -52,9 +73,9 @@ describe("ScAgent registry", function () {
         const agentDefinition = registry.definedAgents['sc_agent_of_finding_area'];
         let registrationPromise;
         let lastPromise = new Promise((success, fail) =>
-            registrationPromise = registry.registrate('sc_agent_of_finding_area', success));
+            registrationPromise = registry.register('sc_agent_of_finding_area', success));
         await registrationPromise;
-        // await sctpClient.js.create_arc(sc_type_arc_pos_const_perm, sc_agent_of_finding_area, cmd_of_find_area);
+        // await sctpClient.create_arc(sc_type_arc_pos_const_perm, sc_agent_of_finding_area, cmd_of_find_area);
         doCommand(cmd_of_find_area);
         return lastPromise;
     });

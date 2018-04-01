@@ -81,5 +81,10 @@ export default class SctpClientOnPromises {
         const sctpClient = await this.sctpClientPromise;
         return new Promise((success, fail) => sctpClient.get_arc.apply(sctpClient, arguments).then(success, fail));
     }
+
+    async close() {
+        const sctpClient = await this.sctpClientPromise;
+        return sctpClient.socket.close();
+    }
 }
 

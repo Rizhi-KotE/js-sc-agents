@@ -1,23 +1,28 @@
-import ConstrUtils from "./ScConstrIteratorUtils";
-import {scKeynodes} from "./service/scKeynodes";
-import {sctpClient} from "./service/sctpClient";
-import {utils} from "SCWeb";
-import {map, prop} from "ramda";
-const {SctpConstrIter,
-    SctpIteratorType,
-    sc_agent_implemented_in_js,
-    sc_type_arc_pos_const_perm,
-    sc_type_node} = utils;
-
-
 /**
  * Load definition of ScAgents witch implemented in js
  */
+import {scKeynodes} from "./service/scKeynodes";
+import {sctpClient} from "./service/sctpClient";
+import {
+    SctpConstrIter,
+    SctpIteratorType,
+    sc_agent_implemented_in_js,
+    sc_type_arc_pos_const_perm,
+    sc_type_node
+} from "utils";
+import {map, prop} from "ramda";
+import ScIteratorUtils from "./ScIteratorUtils";
+import getSysIdtf from "./GetSysIdtf";
+import validate from "./ValidationUtils";
+import ScEventUtils from "./ScEventUtils";
+
+
 export class ScAgentsRepository {
     constructor() {
-        this.constrUtils = new ConstrUtils(sctpClient);
-        this.getSysIdtfs = this.constrUtils.getSysIdtfs(sctpClient, scKeynodes);
+        this.constrUtils = new ScIteratorUtils(sctpClient);
         this._getArc = sctpClient.get_arc.bind(sctpClient);
+        this.getSysIdtfs = getSysIdtf;
+        this.eventTypeUtils = new ScEventUtils();
     }
 
     /**
@@ -41,8 +46,6 @@ export class ScAgentsRepository {
                     "agent_inst",
                     0,
                     0,
-                    // sc_type_edge_common,
-                    // sc_type_edge_common,
                     sc_type_arc_pos_const_perm,
                     nrel_primary_initiation_condition
                 ], {
@@ -52,21 +55,22 @@ export class ScAgentsRepository {
         const initiationConditionArcs = map(prop('initiation_condition_arc'), agentDefinitions);
         const srcAndTargetArcArray = await Promise.all(map(this._getArc, initiationConditionArcs));
         const agentsSysItdfs = await this.getSysIdtfs(agentsInsts);
-        const agentsDefinitions = [];
+        const definitions = [];
         for (const idx in agentsInsts) {
 
-            const createAgentDefinition = this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx]);
-            agentDefinitions.push(agentDefinitions);
+            const agentDefinition = await this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx]);
+            definitions.push(agentDefinition);
         }
-        return agentDefinitions;
+        return definitions;
     }
 
-    _createAgentDefinition(sysIdtf, agentAddr, srcAndTargetScAddr) {
+    async _createAgentDefinition(sysIdtf, agentAddr, srcAndTargetScAddr) {
         const [eventTypeAddr, eventTargetAddr] = srcAndTargetScAddr;
         validate(arguments, ['string', 'natural']);
         validate(srcAndTargetScAddr, ['natural', 'natural']);
+        const scEventType = await this.eventTypeUtils.getSctpEventType(eventTypeAddr);
         if (this.eventTypeUtils.isEventType(eventTypeAddr))
-            return {agentAddr, eventTargetAddr, eventTypeAddr, agentSysIdtf: sysIdtf};
+            return {agentAddr, eventTargetAddr, eventTypeAddr, agentSysIdtf: sysIdtf, scEventType};
         else throw new Error(`Not an eventTypeAddr. Sys-idtf ${sysIdtf}`);
     }
 

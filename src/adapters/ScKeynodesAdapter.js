@@ -1,4 +1,4 @@
-import {utils} from "SCWeb";
+import * as utils from "utils";
 
 export default class ScKeynodesAdapter {
     constructor(sctpClientPromise) {

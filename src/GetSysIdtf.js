@@ -1,6 +1,15 @@
 import {scKeynodes} from "./service/scKeynodes";
 import {sctpClient} from "./service/sctpClient";
 import {curryN, map} from "ramda";
+import {
+    SctpConstrIter,
+    SctpIteratorType,
+    sc_agent_implemented_in_js,
+    sc_type_arc_pos_const_perm,
+    sc_type_node,
+    sc_type_arc_common,
+    sc_type_link
+} from "utils";
 
 async function _getSysIdtf(sctpClient, nrelSysIdtf, scAddr) {
     const triplesWithLink = await sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_5F_A_A_A_F,
@@ -17,9 +26,9 @@ async function _getSysIdtf(sctpClient, nrelSysIdtf, scAddr) {
  */
 async function getSysIdtf(sctpClient, scKeynodes, scAddrs) {
     const nrel_system_identifier = await scKeynodes.resolveKeynode('nrel_system_identifier');
-    const sysItdfsPromises =  map(curryN(3,_getSysIdtf)(sctpClient, nrel_system_identifier),scAddrs);
+    const sysItdfsPromises = map(curryN(3, _getSysIdtf)(sctpClient, nrel_system_identifier), scAddrs);
     return Promise.all(sysItdfsPromises);
 }
 
-export const getSysIdtf = curryN(3, getSysIdtf)(sctpClient, scKeynodes);
+export default curryN(3, getSysIdtf)(sctpClient, scKeynodes);
 
