@@ -7,7 +7,8 @@
     "start": "webpack-dev-server",
     "build": "webpack --config webpack.config.js ",
     "test": "jest --notify --watch",
-    "dev": "webpack-dev-server --config webpack.config.dev.js"
+    "dev": "webpack-dev-server --config webpack.config.dev.js",
+    "watch": "webpack --config webpack.config.js --watch"
   },
   "author": "rizhi-kote",
   "license": "ISC",

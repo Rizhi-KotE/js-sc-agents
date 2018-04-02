@@ -11,9 +11,7 @@ module.exports = {
         filename: "[name].bundle.js",
         sourceMapFilename: "[name].bundle.map.js"
     },
-    externals: {
-        "SCWeb": "SCWeb"
-    },
+    externals: ['utils'],
     resolve: {
         extensions: ['.tsx', '.ts', '.js']
     },

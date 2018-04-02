@@ -7,5 +7,5 @@ ui_command_of_find_area
              (* <- lang_en;;*);
 => ui_nrel_command_lang_template:
    [Template of command ];
-<- atomic_command_class;;
+<- ui_user_command_class_atom;;
 
