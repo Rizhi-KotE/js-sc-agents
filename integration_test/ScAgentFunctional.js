@@ -79,5 +79,20 @@ describe("ScAgent registry", function () {
         doCommand(cmd_of_find_area);
         return lastPromise;
     });
+
+    it("Registering agent should react on creating command", async function () {
+        const {sc_agent_of_finding_area, cmd_of_find_area} =
+            await keynodes.resolveArrayOfKeynodes(['sc_agent_of_finding_area', 'cmd_of_find_area']);
+        const registry = new Registry(sctpClient, keynodes);
+        await registry.init();
+        const agentDefinition = registry.definedAgents['sc_agent_of_finding_area'];
+        let registrationPromise;
+        let lastPromise = new Promise((success, fail) =>
+            registrationPromise = registry.register('sc_agent_of_finding_area', success));
+        await registrationPromise;
+        // await sctpClient.create_arc(sc_type_arc_pos_const_perm, sc_agent_of_finding_area, cmd_of_find_area);
+        doCommand(cmd_of_find_area);
+        return lastPromise;
+    });
 });
 

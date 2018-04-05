@@ -4,11 +4,11 @@
 import {scKeynodes} from "./service/scKeynodes";
 import {sctpClient} from "./service/sctpClient";
 import {
-    SctpConstrIter,
-    SctpIteratorType,
     sc_agent_implemented_in_js,
     sc_type_arc_pos_const_perm,
-    sc_type_node
+    sc_type_node,
+    SctpConstrIter,
+    SctpIteratorType
 } from "utils";
 import {map, prop} from "ramda";
 import ScIteratorUtils from "./ScIteratorUtils";
@@ -26,13 +26,27 @@ export class ScAgentsRepository {
     }
 
     /**
+     * Read sc-addrs of init condition and result contour
+     * @param agentInst - addr of agents sc-node
+     */
+    async readInitiationAndResult(agentInst) {
+        validate(arguments, ['natural']);
+        const {nrel_initiation_condition_and_result} = await scKeynodes.resolveArrayOfKeynodes(['nrel_initiation_condition_and_result']);
+        const initResultArc = await sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_5F_A_A_A_F, [agentInst, 0, 0, 0, nrel_initiation_condition_and_result]);
+        if (initResultArc.length !== 1)
+            console.warn(`Unexpected init and results for agent ${agentInst}. Found ${initResultArc.length} tuples.`);
+        return sctpClient.get_arc(initResultArc[0][2]);
+    }
+
+    /**
      * Find all js-agents in KB
      * and fetch its definition
      * @returns {Promise.<{agentAddr, eventTargetAddr, eventTypeAddr, agentSysIdtf: string}>}
      */
     async loadAgentsDefinition() {
-        const {sc_agent_implemented_in_js, nrel_primary_initiation_condition} =
-            await scKeynodes.resolveArrayOfKeynodes(['sc_agent_implemented_in_js', 'nrel_primary_initiation_condition']);
+        const {sc_agent_implemented_in_js, nrel_primary_initiation_condition, nrel_initiation_condition_and_result} =
+            await scKeynodes.resolveArrayOfKeynodes(['sc_agent_implemented_in_js', 'nrel_primary_initiation_condition',
+                'nrel_initiation_condition_and_result']);
         const agentDefinitions = await this.constrUtils.doStructsRequest(
             this.constrUtils.mapConstructs(['agent_inst', 'initiation_condition_arc']), [
                 SctpConstrIter(SctpIteratorType.SCTP_ITERATOR_3F_A_A, [
@@ -56,21 +70,31 @@ export class ScAgentsRepository {
         const srcAndTargetArcArray = await Promise.all(map(this._getArc, initiationConditionArcs));
         const agentsSysItdfs = await this.getSysIdtfs(agentsInsts);
         const definitions = [];
+        const initAndResult = await Promise.all(map(this.readInitiationAndResult, agentsInsts));
         for (const idx in agentsInsts) {
 
-            const agentDefinition = await this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx]);
+            const agentDefinition = await this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx], initAndResult[idx]);
             definitions.push(agentDefinition);
         }
         return definitions;
     }
 
-    async _createAgentDefinition(sysIdtf, agentAddr, srcAndTargetScAddr) {
+    async _createAgentDefinition(sysIdtf, agentAddr, srcAndTargetScAddr, initAndResult) {
         const [eventTypeAddr, eventTargetAddr] = srcAndTargetScAddr;
-        validate(arguments, ['string', 'natural']);
+        const [initCondAddr, finalCondAddr] = initAndResult;
+        validate(arguments, ['string', 'natural', ['natural', 'natural'], ['natural', 'natural']]);
         validate(srcAndTargetScAddr, ['natural', 'natural']);
         const scEventType = await this.eventTypeUtils.getSctpEventType(eventTypeAddr);
         if (this.eventTypeUtils.isEventType(eventTypeAddr))
-            return {agentAddr, eventTargetAddr, eventTypeAddr, agentSysIdtf: sysIdtf, scEventType};
+            return {
+                agentAddr,
+                eventTargetAddr,
+                eventTypeAddr,
+                agentSysIdtf: sysIdtf,
+                scEventType,
+                initCondAddr,
+                finalCondAddr
+            };
         else throw new Error(`Not an eventTypeAddr. Sys-idtf ${sysIdtf}`);
     }
 

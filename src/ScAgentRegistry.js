@@ -69,6 +69,5 @@ export default class ScAgentRegistry {
         console.log(`Subscribing for event type ${scEventType} and target ${agentDefinition.eventTargetAddr}`);
         await sctpClient.event_create(scEventType, agentDefinition.eventTargetAddr, executor);
     }
-
 }
 
