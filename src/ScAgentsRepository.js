@@ -1,6 +1,3 @@
-/**
- * Load definition of ScAgents witch implemented in js
- */
 import {scKeynodes} from "./service/scKeynodes";
 import {sctpClient} from "./service/sctpClient";
 import {
@@ -16,7 +13,12 @@ import getSysIdtf from "./GetSysIdtf";
 import validate from "./ValidationUtils";
 import ScEventUtils from "./ScEventUtils";
 
+export class ScAgentReadError extends Error {
+}
 
+/**
+ * Load definition of ScAgents witch implemented in js
+ */
 export class ScAgentsRepository {
     constructor() {
         this.constrUtils = new ScIteratorUtils(sctpClient);
@@ -29,13 +31,18 @@ export class ScAgentsRepository {
      * Read sc-addrs of init condition and result contour
      * @param agentInst - addr of agents sc-node
      */
-    async readInitiationAndResult(agentInst) {
-        validate(arguments, ['natural']);
-        const {nrel_initiation_condition_and_result} = await scKeynodes.resolveArrayOfKeynodes(['nrel_initiation_condition_and_result']);
-        const initResultArc = await sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_5F_A_A_A_F, [agentInst, 0, 0, 0, nrel_initiation_condition_and_result]);
-        if (initResultArc.length !== 1)
-            console.warn(`Unexpected init and results for agent ${agentInst}. Found ${initResultArc.length} tuples.`);
-        return sctpClient.get_arc(initResultArc[0][2]);
+    async _readInitiationAndResult(agentInst) {
+        try {
+            validate(arguments, ['natural']);
+            const {nrel_initiation_condition_and_result} = await scKeynodes.resolveArrayOfKeynodes(['nrel_initiation_condition_and_result']);
+            const initResultArc = await
+                sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_5F_A_A_A_F, [agentInst, 0, 0, 0, nrel_initiation_condition_and_result]);
+            if (initResultArc.length !== 1)
+                console.warn(`Unexpected init and results for agent ${agentInst}. Found ${initResultArc.length} tuples.`);
+            return sctpClient.get_arc(initResultArc[0][2]);
+        } catch (e) {
+            throw new ScAgentReadError(`Can't find agent's initAndResultCondition. Agent addr is ${agentInst}`, e);
+        }
     }
 
     /**
@@ -70,7 +77,7 @@ export class ScAgentsRepository {
         const srcAndTargetArcArray = await Promise.all(map(this._getArc, initiationConditionArcs));
         const agentsSysItdfs = await this.getSysIdtfs(agentsInsts);
         const definitions = [];
-        const initAndResult = await Promise.all(map(this.readInitiationAndResult, agentsInsts));
+        const initAndResult = await Promise.all(map(this._readInitiationAndResult, agentsInsts));
         for (const idx in agentsInsts) {
 
             const agentDefinition = await this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx], initAndResult[idx]);
@@ -82,7 +89,7 @@ export class ScAgentsRepository {
     async _createAgentDefinition(sysIdtf, agentAddr, srcAndTargetScAddr, initAndResult) {
         const [eventTypeAddr, eventTargetAddr] = srcAndTargetScAddr;
         const [initCondAddr, finalCondAddr] = initAndResult;
-        validate(arguments, ['string', 'natural', ['natural', 'natural'], ['natural', 'natural']]);
+        validate(arguments, ['string', 'natural', {0: 'natural', 1: 'natural'}, {0: 'natural', 1: 'natural'}]);
         validate(srcAndTargetScAddr, ['natural', 'natural']);
         const scEventType = await this.eventTypeUtils.getSctpEventType(eventTypeAddr);
         if (this.eventTypeUtils.isEventType(eventTypeAddr))

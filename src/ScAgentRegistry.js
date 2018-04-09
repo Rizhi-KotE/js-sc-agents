@@ -1,6 +1,7 @@
 import {ScAgentsRepository} from "./ScAgentsRepository";
 import {sctpClient} from "./service/sctpClient";
 import validate from "./ValidationUtils";
+import {ScAgentExecutor} from "./ScAgentExecutor";
 
 export default class ScAgentRegistry {
 
@@ -9,6 +10,7 @@ export default class ScAgentRegistry {
         this.definedAgents = {};
         this.registeredAgents = {};
         this.scAgentRepository = new ScAgentsRepository();
+        this.executor = new ScAgentExecutor();
     }
 
     async _fetchAgentsDefinition() {
@@ -43,9 +45,9 @@ export default class ScAgentRegistry {
         await this.activateIfCan(sysIdtf);
     }
 
-    async activateIfCan(sysIdtf){
+    async activateIfCan(sysIdtf) {
         validate(arguments, ["string"]);
-        if(this.definedAgents[sysIdtf] && this.registeredAgents[sysIdtf]){
+        if (this.definedAgents[sysIdtf] && this.registeredAgents[sysIdtf]) {
             await this._subscribeToEvent(sysIdtf);
         }
     }
@@ -63,11 +65,7 @@ export default class ScAgentRegistry {
      */
     async _subscribeToEvent(sysIdtf) {
         validate(sysIdtf, ["string"]);
-        const agentDefinition = this.definedAgents[sysIdtf];
-        const executor = this.registeredAgents[sysIdtf];
-        const scEventType = agentDefinition.scEventType;
-        console.log(`Subscribing for event type ${scEventType} and target ${agentDefinition.eventTargetAddr}`);
-        await sctpClient.event_create(scEventType, agentDefinition.eventTargetAddr, executor);
+        this.executor.subscribe(this.definedAgents[sysIdtf], this.registeredAgents[sysIdtf]);
     }
 }
 
