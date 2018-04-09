@@ -8,12 +8,15 @@ import {
     SctpIteratorType,
     sc_agent_implemented_in_js,
     sc_type_arc_pos_const_perm,
-    sc_type_node
+    sc_type_node,
+    SctpClientCreate
 } from "utils";
+
+import {assert} from "chai";
 
 async function initClient() {
     const sctpClientPromise = new Promise((success, fail) => {
-        utils.SctpClientCreate()
+        SctpClientCreate()
             .done((sctpClient) => {
                 delete sctpClient.onClose;
                 return sctpClient;

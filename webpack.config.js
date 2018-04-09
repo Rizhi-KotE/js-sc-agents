@@ -1,8 +1,7 @@
 var path = require("path");
 module.exports = {
     entry: {
-        app: ["./index.js"],
-        test: ["./integration_test/index.js"]
+        app: ["./index.js"]
     },
     output: {
         library: "ScAgentRegistry",
