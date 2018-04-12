@@ -41,7 +41,8 @@ export class ScAgentsRepository {
                 console.warn(`Unexpected init and results for agent ${agentInst}. Found ${initResultArc.length} tuples.`);
             return sctpClient.get_arc(initResultArc[0][2]);
         } catch (e) {
-            throw new ScAgentReadError(`Can't find agent's initAndResultCondition. Agent addr is ${agentInst}`, e);
+            console.error(e);
+            console.error(`Can't find agent's initAndResultCondition. Agent addr is ${agentInst}`);
         }
     }
 
@@ -79,9 +80,14 @@ export class ScAgentsRepository {
         const definitions = [];
         const initAndResult = await Promise.all(map(this._readInitiationAndResult, agentsInsts));
         for (const idx in agentsInsts) {
-
-            const agentDefinition = await this._createAgentDefinition(agentsSysItdfs[idx], agentsInsts[idx], srcAndTargetArcArray[idx], initAndResult[idx]);
-            definitions.push(agentDefinition);
+            if (agentsInsts[idx] && agentsSysItdfs[idx] && srcAndTargetArcArray[idx], initAndResult[idx]) {
+                const agentDefinition = await this._createAgentDefinition(
+                    agentsSysItdfs[idx],
+                    agentsInsts[idx],
+                    srcAndTargetArcArray[idx],
+                    initAndResult[idx]);
+                definitions.push(agentDefinition);
+            }
         }
         return definitions;
     }

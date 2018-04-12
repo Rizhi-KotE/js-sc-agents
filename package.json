@@ -4,8 +4,8 @@
   "description": "Wrapper of sc-agents implemented in js",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js ",
-    "test": "jest --notify --watch"
+    "build": "webpack --config webpack.config.js --watch"
+//    "test": "jest --notify --watch"
   },
   "author": "rizhi-kote",
   "license": "ISC",

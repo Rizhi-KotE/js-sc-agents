@@ -1,5 +1,5 @@
 import {core} from "SCWeb";
-import sctpClient from "../adapters/SctpClientOnPromises";
+import {sctpClient} from "../service/sctpClient";
 import {
     sc_agent_implemented_in_js,
     sc_type_arc_pos_const_perm,
@@ -16,10 +16,11 @@ const Server = core.Server;
  * @returns {Promise.<void>}
  */
 async function findQuestion(initCondAddr) {
-    const commandAddr = await scKeynodes.resolveKeynode('ui_menu_na_view_kb_pattern');
+    const commandAddr = await scKeynodes.resolveKeynode('ui_menu_file_for_finding_pattern');
     const nrel_answer = await scKeynodes.resolveKeynode('nrel_answer');
     const question_initiated = await scKeynodes.resolveKeynode('question_initiated');
-    const questionAddr = await new Promise((resolve, reject) => Server.doCommand(commandAddr, [initCondAddr], resolve));
+    const questionAddr = await new Promise((resolve, reject) => Server.doCommand(commandAddr, [initCondAddr], resolve))
+        .then(R.prop('question'));
     const resultTuple = await sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_5F_A_A_A_F, [questionAddr, 0, 0, 0, nrel_answer]);
     if (resultTuple.length !== 1) throw Error(`Question has ${resultTuple.length} answers`);
     const answer = resultTuple[0][2];
