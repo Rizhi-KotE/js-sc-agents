@@ -1,5 +1,5 @@
 import {
-    sc_type_arc_pos_const_perm, sc_type_const, SctpConstrIter, SctpContrIterationResult, SctpIteratorType,
+    sc_type_arc_pos_const_perm, sc_type_const, sc_type_var, SctpConstrIter, SctpContrIterationResult, SctpIteratorType,
     ScTriple
 } from "./ScTypes";
 import * as R from "ramda";
@@ -63,7 +63,9 @@ function makeIteratorArgument(isConstant, isFixed, getMapping, getType, addr: nu
 }
 
 function makeIteratorArgs(isConstant, isFixed, getMapping, getType, triple: ScTriple): (string | number)[] {
-    const makeIteratorArgumnetCurried: (addr: number) => string | number = makeIteratorArgument.bind(null, isConstant, isFixed, getMapping, getType);
+    const makeIteratorArgumnetCurried: (addr: number) =>
+        string
+        | number = makeIteratorArgument.bind(null, isConstant, isFixed, getMapping, getType);
     return [makeIteratorArgumnetCurried(triple[0]), makeIteratorArgumnetCurried(triple[1]), makeIteratorArgumnetCurried(triple[2])]
 }
 
@@ -73,14 +75,6 @@ function makeIteratorMapping(isFixed, getMapping, triple: ScTriple): Object {
     if (!isFixed(triple[1])) mapping[getMapping(triple[1])] = 1;
     if (!isFixed(triple[2])) mapping[getMapping(triple[2])] = 2;
     return mapping;
-}
-
-function getMappingInit(): (addr: number) => string {
-    let counter = 0;
-    return R.memoize((addr) => {
-        counter++;
-        return counter.toString();
-    })
 }
 
 function makeIterator(isConstant, isFixed, getMapping, getElementType: ScElementTypeResolver, triple: ScTriple): SctpConstrIter {
@@ -103,6 +97,7 @@ function assertCorrectQuery(isFixed, triples: ScTriple[]): void {
     if (!R.all(isFixed, R.flatten<number>(triples))) throw new Error("Query don't fix all elements");
 }
 
+
 /**
  * Make array of SctpContrIterators from array of triples
  * Should use to find by pattern
@@ -112,7 +107,7 @@ function assertCorrectQuery(isFixed, triples: ScTriple[]): void {
  */
 export function makeSctpQuery(getElementType: ScElementTypeResolver, triples: ScTriple[]): SctpConstrIter[] {
     let fixed = getConstants(getElementType, triples);
-    const getMapping = getMappingInit();
+    const getMapping = R.toString;
     const isFixed = (addr: number) => fixed.has(addr);
     const isTripleFixed = isTripleHasFixedElement.bind(null, isFixed);
     const isNotFixed = R.complement(isFixed);
@@ -123,11 +118,15 @@ export function makeSctpQuery(getElementType: ScElementTypeResolver, triples: Sc
     while (true) {
         [tripleWithFixedElement, tripleWithoutFixedElement] = R.partition<ScTriple>(isTripleFixed, tripleWithoutFixedElement);
         if (tripleWithFixedElement.length === 0) throw new Error('No triple with fixed');
-        let iterators = R.map(makeIteratorCurried, tripleWithFixedElement);
-        iterators = R.filter(isIteratorCorrect, iterators);
-        let newFixed = R.filter(isNotFixed, R.flatten(tripleWithFixedElement));
-        fixed = concatSet(fixed, newFixed);
-        query = R.concat(query, iterators);
+        for (const triple of tripleWithFixedElement) {
+            const iterator = makeIteratorCurried(triple);
+            if (isIteratorCorrect(iterator)) {
+                let newFixed = R.filter(isNotFixed, triple);
+                fixed = concatSet(fixed, newFixed);
+                query.push(iterator);
+            }
+
+        }
         if (tripleWithoutFixedElement.length === 0) break;
     }
     assertCorrectQuery(isFixed, triples);
@@ -163,4 +162,13 @@ export function createQueryWithContext(contextAddr: number, query: SctpConstrIte
         contextAddr, sc_type_arc_pos_const_perm, binding
     ], {});
     return R.concat(query, R.map(makeContextIterator, bindings));
+}
+
+export function createQueryToNotVariables(query: SctpConstrIter[]): SctpConstrIter[] {
+    const newQuery = [];
+    for (const iter of query) {
+        const args = R.map((arg) => R.type(arg) === 'Number' ? (arg as number) & (0xffffff ^ sc_type_var) : arg, iter.args);
+        newQuery.push(SctpConstrIter(iter.iterator_type, args, iter.mappings));
+    }
+    return newQuery;
 }

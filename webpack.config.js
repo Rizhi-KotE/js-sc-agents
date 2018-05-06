@@ -1,7 +1,7 @@
 var path = require("path");
 module.exports = {
     entry: {
-        app: ["./index.js"]
+        app: ["./index.ts"]
     },
     output: {
         library: "ScAgentRegistry",
@@ -20,7 +20,8 @@ module.exports = {
             {test: /\.js$/, use: 'babel-loader', exclude: /node_modules/},
             {test: /\.jsx$/, use: 'babel-loader', exclude: /node_modules/},
             {test: /\.(ts|tsx)$/, use: 'ts-loader', exclude: /node_modules/},
-        ]
+            {enforce: "pre", test: /\.ts$/, loader: "source-map-loader" },
+        ],
     },
     devtool: "inline-source-map"
 };

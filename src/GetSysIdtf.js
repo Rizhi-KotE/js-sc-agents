@@ -21,7 +21,7 @@ async function _getSysIdtf(sctpClient, nrelSysIdtf, scAddr) {
 /**
  * For array of sc-addr find it-s sys-id
  * @param sctpClient - sctpClient.ts
- * @param scKeynodes - scKeynodes.js
+ * @param scKeynodes - scKeynodes.ts
  * @param scAddrs: [natural] - sys-ids
  */
 async function getSysIdtf(sctpClient, scKeynodes, scAddrs) {

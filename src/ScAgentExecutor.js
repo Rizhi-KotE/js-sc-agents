@@ -15,8 +15,8 @@ export class ScAgentExecutor {
             R.curryN(3, ScAgentExecutor.execute)(agentDefinition, executor));
     }
 
-    static async execute(agentDefinition, executor, targetAddr) {
-            executor({agentDefinition, targetAddr});
+    static async execute(agentDefinition, executor, targetAddr, argAddr) {
+            executor({agentDefinition, targetAddr, argAddr});
     }
 
     failedFinish(agentDefinition, targetAddr) {

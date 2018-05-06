@@ -2,7 +2,7 @@
 import {SctpContrIterationResult} from "./ScTypes";
 
 
-export function createSctpClientAdapter(url: string): SctpClient {
+export function createSctpClientAdapter(url?: string): SctpClient {
     const sctpClientPromise: Promise<SctpClient> = new Promise((success, fail) => {
         const sctpClient = new (window as any).SctpClient({
             onError: fail, onConnect: function () {
@@ -45,24 +45,24 @@ export default class SctpClientOnPromises implements SctpClient {
         return this.sctpClientPromise;
     }
 
-    async check_element(addr: number) {
+    async check_element(addr: number) : Promise<boolean>{
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.check_element(addr).then(success, fail));
+        return new Promise((success, fail) => sctpClient.check_element(addr).then(success, fail)) as Promise<boolean>;
     }
 
-    async create_node(type: number) {
+    async create_node(type: number) : Promise<number>{
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.create_node(type).then(success, fail));
+        return new Promise((success, fail) => sctpClient.create_node(type).then(success, fail)) as Promise<number>
     }
 
-    async create_arc(type: number, src: number, trg: number): Promise<any> {
+    async create_arc(type: number, src: number, trg: number): Promise<number> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.create_arc(type, src, trg).then(success, fail));
+        return new Promise((success, fail) => sctpClient.create_arc(type, src, trg).then(success, fail)) as Promise<number>;
     }
 
-    async create_link() {
+    async create_link(): Promise<number> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.create_link().then(success, fail));
+        return new Promise((success, fail) => sctpClient.create_link().then(success, fail)) as Promise<number>;
     }
 
     async set_link_content(addr: number, data: number | string | ArrayBuffer) {
@@ -81,24 +81,24 @@ export default class SctpClientOnPromises implements SctpClient {
             .then(console.log.bind(undefined, "Event "));
     }
 
-    async iterate_elements(iterator_type: number, args: Array<number>) {
+    async iterate_elements(iterator_type: number, args: Array<number>): Promise<number[][]> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.iterate_elements(iterator_type, args).then(success, fail));
+        return new Promise((success, fail) => sctpClient.iterate_elements(iterator_type, args).then(success, fail)) as Promise<number[][]>;
     }
 
-    async iterate_constr(...iterators: Array<any>) {
+    async iterate_constr(...iterators: Array<any>): Promise<SctpContrIterationResult> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.iterate_constr.apply(sctpClient, iterators).then(success, fail));
+        return new Promise((success, fail) => sctpClient.iterate_constr.apply(sctpClient, iterators).then(success, fail)) as  Promise<SctpContrIterationResult>;
     }
 
-    async find_element_by_system_identifier(data: string) {
+    async find_element_by_system_identifier(data: string): Promise<number> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.find_element_by_system_identifier(data).then(success, fail));
+        return new Promise((success, fail) => sctpClient.find_element_by_system_identifier(data).then(success, fail)) as Promise<number>;
     }
 
-    async event_create(evt_type: number, addr: number, callback: (target: number, attr: number) => void) {
+    async event_create(evt_type: number, addr: number, callback: (target: number, attr: number) => void): Promise<number> {
         const sctpClient = await this.sctpClientPromise;
-        return new Promise((success, fail) => sctpClient.event_create(evt_type, addr, callback).then(success, fail));
+        return new Promise((success, fail) => sctpClient.event_create(evt_type, addr, callback).then(success, fail)) as Promise<number>;
     }
 
     async event_destroy(evt_id: number): Promise<void> {
@@ -121,8 +121,8 @@ export default class SctpClientOnPromises implements SctpClient {
         return new Promise((success, fail) => sctpClient.get_arc(arc).then(success, fail)) as Promise<[number, number]>;
     }
 
-    async close() {
+    async close(): Promise<void> {
         const sctpClient = await this.sctpClientPromise;
-        return sctpClient.socket.close();
+        sctpClient.socket.close();
     }
 }
