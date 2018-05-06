@@ -3,7 +3,7 @@ import * as utils from "utils";
 export default class ScKeynodesAdapter {
     constructor(sctpClientPromise) {
         this.scKeynodesPromise  = sctpClientPromise
-            .then(sctpClient => new utils.ScKeynodes(sctpClient));
+            .then(sctpClient => new ScKeynodes(sctpClient));
     }
 
     async resolveArrayOfKeynodes(sysIdtfs) {
